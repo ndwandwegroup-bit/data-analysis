@@ -1,0 +1,28 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.ensemble import IsolationForest
+
+# Load sample dataset
+df = pd.read_csv("network_traffic.csv")
+
+# Clean data
+df.dropna(inplace=True)
+
+# Basic EDA
+print("Dataset Shape:", df.shape)
+print(df.describe())
+
+# Traffic by hour (if timestamp exists)
+if "Timestamp" in df.columns:
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+    traffic = df.groupby(df["Timestamp"].dt.hour).size()
+    traffic.plot(kind="line", title="Traffic Volume by Hour")
+    plt.show()
+
+# Anomaly Detection
+features = df.select_dtypes(include=["float64", "int64"])
+
+model = IsolationForest(contamination=0.03)
+df["Anomaly"] = model.fit_predict(features)
+
+print("Anomalies Detected:", (df["Anomaly"] == -1).sum())
